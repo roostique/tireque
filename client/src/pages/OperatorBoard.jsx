@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import QRCode from 'qrcode'
-import { mockStore } from '../mock/store'
+import { api } from '../lib/api'
+import { appUrl } from '../lib/links'
 import { useQueueStream } from '../hooks/useQueueStream'
 import { useT } from '../i18n'
 
@@ -23,36 +24,38 @@ export default function OperatorBoard() {
   const shop = queue?.shop
 
   useEffect(() => {
-    const s = mockStore.getShopBySecret(secret)
-    if (s) setShopId(s.id)
-    else setNotFound(true)
+    let alive = true
+    api.getShopBySecret(secret)
+      .then(s => { if (!alive) return; if (s) setShopId(s.id); else setNotFound(true) })
+      .catch(() => { if (alive) setNotFound(true) })
+    return () => { alive = false }
   }, [secret])
 
   useEffect(() => {
     if (!shop?.code) return
-    const url = `${window.location.href.split('#')[0]}#/q/${shop.code}`
+    const url = appUrl(`/q/${shop.code}`)
     QRCode.toDataURL(url, { width: 256, margin: 2, color: { dark: '#111827' } })
       .then(setQrUrl)
       .catch(() => {})
   }, [shop?.code])
 
   function handleNext() {
-    mockStore.advance(secret)
+    api.advance(secret).catch(() => {})
   }
 
   function handleNoShow() {
     if (!queue?.serving) return
     const name = `${tColor(queue.serving.car_color)} ${queue.serving.car_model}`
     if (!window.confirm(t('noShowConfirm', name))) return
-    mockStore.markNoShow(secret, queue.serving.id)
+    api.markNoShow(secret, queue.serving.id).catch(() => {})
   }
 
   function handleToggle() {
-    mockStore.toggleAccepting(secret)
+    api.toggleAccepting(secret).catch(() => {})
   }
 
   function handleCopyLink() {
-    const url = `${window.location.href.split('#')[0]}#/q/${shop.code}`
+    const url = appUrl(`/q/${shop.code}`)
     navigator.clipboard.writeText(url).catch(() => {})
     setCopiedLink(true)
     setTimeout(() => setCopiedLink(false), 2000)
@@ -75,7 +78,7 @@ export default function OperatorBoard() {
 
   const hasWaiting = queue.waiting.length > 0
   const canAdvance = hasWaiting || !!queue.serving
-  const clientUrl = `${window.location.href.split('#')[0]}#/q/${shop.code}`
+  const clientUrl = appUrl(`/q/${shop.code}`)
 
   return (
     <div className="op-page">

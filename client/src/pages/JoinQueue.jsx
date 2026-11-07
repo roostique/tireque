@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { mockStore } from '../mock/store'
+import { api } from '../lib/api'
 import { useQueueStream } from '../hooks/useQueueStream'
 import { estimateWait } from '../lib/eta'
 import { useT } from '../i18n'
@@ -27,22 +27,32 @@ export default function JoinQueue() {
   const { queue } = useQueueStream(shopId)
 
   useEffect(() => {
-    const shop = mockStore.getShopByCode(code)
-    if (!shop) { setNotFound(true); return }
+    let alive = true
+    ;(async () => {
+      try {
+        const shop = await api.getShopByCode(code)
+        if (!alive) return
+        if (!shop) { setNotFound(true); return }
 
-    const myId = mockStore.getMyEntryId(code)
-    if (myId) {
-      const entry = mockStore.getEntry(myId)
-      if (entry && ['waiting', 'serving'].includes(entry.status)) {
-        navigate(`/t/${myId}`, { replace: true })
-        return
+        const myId = api.getMyEntryId(code)
+        if (myId) {
+          const entry = await api.getEntry(myId)
+          if (!alive) return
+          if (entry && ['waiting', 'serving'].includes(entry.status)) {
+            navigate(`/t/${myId}`, { replace: true })
+            return
+          }
+        }
+
+        setShopId(shop.id)
+        setShopName(shop.name)
+        setShopAccepting(shop.accepting)
+        setAvgMin(shop.avg_service_min)
+      } catch {
+        if (alive) setNotFound(true)
       }
-    }
-
-    setShopId(shop.id)
-    setShopName(shop.name)
-    setShopAccepting(shop.accepting)
-    setAvgMin(shop.avg_service_min)
+    })()
+    return () => { alive = false }
   }, [code, navigate])
 
   useEffect(() => {
@@ -51,7 +61,7 @@ export default function JoinQueue() {
     }
   }, [queue?.shop?.accepting])
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     if (!form.car_color) { setError(t('errColor')); return }
     if (!form.car_model.trim()) { setError(t('errModel')); return }
@@ -59,12 +69,14 @@ export default function JoinQueue() {
 
     setLoading(true)
     setError('')
-    const clientToken = mockStore.getClientToken()
-    const entry = mockStore.joinQueue(code, {
-      car_color: form.car_color,
-      car_model: form.car_model.trim(),
-      plate: form.plate.trim(),
-    }, clientToken)
+    let entry = null
+    try {
+      entry = await api.joinQueue(code, {
+        car_color: form.car_color,
+        car_model: form.car_model.trim(),
+        plate: form.plate.trim(),
+      })
+    } catch {}
 
     if (!entry) {
       setError(t('errJoin'))
@@ -72,7 +84,7 @@ export default function JoinQueue() {
       return
     }
 
-    mockStore.setMyEntryId(code, entry.id)
+    api.setMyEntryId(code, entry.id)
     navigate(`/t/${entry.id}`)
   }
 

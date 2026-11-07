@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useEntryStream } from '../hooks/useQueueStream'
-import { mockStore } from '../mock/store'
+import { api } from '../lib/api'
 import { estimateWait } from '../lib/eta'
 import { useT } from '../i18n'
 
@@ -18,7 +18,6 @@ export default function TicketStatus() {
   const entry = useEntryStream(id)
   const prevStatusRef = useRef(null)
   const prevPositionRef = useRef(null)
-  const clientToken = mockStore.getClientToken()
 
   useEffect(() => {
     if (!entry) return
@@ -36,13 +35,17 @@ export default function TicketStatus() {
     prevPositionRef.current = entry.position
   }, [entry?.status, entry?.position])
 
-  function handleCancel() {
+  async function handleCancel() {
     if (!window.confirm(t('cancelConfirm'))) return
-    const success = mockStore.cancelEntry(id, clientToken)
+    const success = await api.cancelEntry(id)
     if (success && entry?.shop?.code) {
-      mockStore.clearMyEntryId(entry.shop.code)
+      api.clearMyEntryId(entry.shop.code)
     }
     navigate('/', { replace: true })
+  }
+
+  if (entry === undefined) {
+    return <div className="page-center"><p className="text-muted">{t('loading')}</p></div>
   }
 
   if (!entry) {
@@ -57,7 +60,7 @@ export default function TicketStatus() {
   }
 
   const shop = entry.shop
-  const isMyTicket = entry.client_token === clientToken
+  const isMyTicket = entry.is_mine
   const canCancel = isMyTicket && ['waiting', 'serving'].includes(entry.status)
   const avg = shop?.avg_service_min || 20
 

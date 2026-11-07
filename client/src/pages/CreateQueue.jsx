@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import QRCode from 'qrcode'
-import { mockStore } from '../mock/store'
+import { api } from '../lib/api'
+import { appUrl } from '../lib/links'
 import { useT } from '../i18n'
 
 export default function CreateQueue() {
@@ -11,11 +12,22 @@ export default function CreateQueue() {
   const [created, setCreated] = useState(null)
   const [qrUrl, setQrUrl] = useState('')
   const [copied, setCopied] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [error, setError] = useState('')
 
   async function handleCreate() {
-    const shop = mockStore.createShop(name.trim() || 'Шиномонтаж')
-    const base = window.location.href.split('#')[0]
-    const clientUrl = `${base}#/q/${shop.code}`
+    if (creating) return
+    setCreating(true)
+    setError('')
+    let shop
+    try {
+      shop = await api.createShop(name.trim() || 'Шиномонтаж')
+    } catch {
+      setError(t('errNetwork'))
+      setCreating(false)
+      return
+    }
+    const clientUrl = appUrl(`/q/${shop.code}`)
     try {
       const url = await QRCode.toDataURL(clientUrl, { width: 300, margin: 2, color: { dark: '#111827' } })
       setQrUrl(url)
@@ -49,7 +61,9 @@ export default function CreateQueue() {
             />
           </div>
 
-          <button className="btn-primary btn-lg" onClick={handleCreate}>
+          {error && <p className="error">{error}</p>}
+
+          <button className="btn-primary btn-lg" onClick={handleCreate} disabled={creating}>
             {t('createBtn')}
           </button>
         </div>
@@ -57,9 +71,7 @@ export default function CreateQueue() {
     )
   }
 
-  const base = window.location.href.split('#')[0]
-  const clientUrl = `${base}#/q/${created.code}`
-  const adminUrl = `${base}#/op/${created.admin_secret}`
+  const adminUrl = appUrl(`/op/${created.admin_secret}`)
 
   return (
     <div className="page">
