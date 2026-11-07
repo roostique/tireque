@@ -1,4 +1,4 @@
-// Talks to the TireQueue server. Per-device bits (who am I, which ticket is mine)
+// Talks to the Jazylu server. Per-device bits (who am I, which ticket is mine)
 // stay in localStorage on purpose.
 
 async function request(method, path, body, headers = {}) {

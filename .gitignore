@@ -5,3 +5,6 @@ client/dist/
 *.local
 server/node_modules/
 data/
+build/
+jazylu-plesk.zip
+tirequeue-plesk.zip

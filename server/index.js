@@ -5,7 +5,10 @@ import { store, publicEntry, publicShop } from './store.js'
 
 const PORT = Number(process.env.PORT) || 3000
 const HOST = process.env.HOST || '0.0.0.0'
-const CLIENT_DIST = resolve(process.env.CLIENT_DIST || join(import.meta.dirname, '..', 'client', 'dist'))
+// Built client: client/dist in the repo, or public/ in the Plesk package.
+const CLIENT_DIST = resolve(process.env.CLIENT_DIST ||
+  [join(import.meta.dirname, '..', 'client', 'dist'), join(import.meta.dirname, '..', 'public')].find(existsSync) ||
+  join(import.meta.dirname, '..', 'client', 'dist'))
 
 const app = express()
 app.disable('x-powered-by')
@@ -156,5 +159,5 @@ if (existsSync(CLIENT_DIST)) {
 }
 
 app.listen(PORT, HOST, () => {
-  console.log(`[tirequeue] http://localhost:${PORT}`)
+  console.log(`[jazylu] http://localhost:${PORT}`)
 })

@@ -4,12 +4,8 @@ import { useEntryStream } from '../hooks/useQueueStream'
 import { api } from '../lib/api'
 import { estimateWait } from '../lib/eta'
 import { useT } from '../i18n'
+import { colorDot } from '../lib/colors'
 
-const COLOR_HEX = {
-  'белый': '#f5f5f5', 'чёрный': '#222222', 'серый': '#888888', 'серебристый': '#c0c0c0',
-  'синий': '#2563EB', 'красный': '#DC2626', 'зелёный': '#16A34A', 'жёлтый': '#EAB308',
-  'оранжевый': '#F97316', 'коричневый': '#78350F', 'бежевый': '#D4A76A', 'фиолетовый': '#7C3AED',
-}
 
 export default function TicketStatus() {
   const { id } = useParams()
@@ -67,7 +63,7 @@ export default function TicketStatus() {
   return (
     <div className="page">
       <header className="page-header">
-        <h1>{shop?.name || 'Шиномонтаж'}</h1>
+        <h1>{shop?.name || t('defaultShopName')}</h1>
         <p className="text-muted small">{t('codeLabel')} {shop?.code || '—'}</p>
       </header>
 
@@ -75,7 +71,7 @@ export default function TicketStatus() {
         <div className="car-label">
           <span
             className="car-color-dot"
-            style={{ background: COLOR_HEX[entry.car_color] || '#888' }}
+            style={{ background: colorDot(entry.car_color) }}
           />
           <span className="car-name">{tColor(entry.car_color)} {entry.car_model}</span>
         </div>
@@ -123,7 +119,7 @@ export default function TicketStatus() {
           <div className="car-info">
             <span
               className="car-color-dot"
-              style={{ background: COLOR_HEX[entry.serving.car_color] || '#888' }}
+              style={{ background: colorDot(entry.serving.car_color) }}
             />
             <span>{tColor(entry.serving.car_color)} {entry.serving.car_model}</span>
           </div>

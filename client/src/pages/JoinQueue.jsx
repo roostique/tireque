@@ -4,12 +4,7 @@ import { api } from '../lib/api'
 import { useQueueStream } from '../hooks/useQueueStream'
 import { estimateWait } from '../lib/eta'
 import { useT } from '../i18n'
-
-const COLORS = [
-  'белый', 'чёрный', 'серый', 'серебристый',
-  'синий', 'красный', 'зелёный', 'жёлтый',
-  'оранжевый', 'коричневый', 'бежевый', 'фиолетовый',
-]
+import { COLORS, normalizeCustomColor } from '../lib/colors'
 
 export default function JoinQueue() {
   const { code } = useParams()
@@ -21,6 +16,8 @@ export default function JoinQueue() {
   const [avgMin, setAvgMin] = useState(20)
   const [notFound, setNotFound] = useState(false)
   const [form, setForm] = useState({ car_color: '', car_model: '', plate: '' })
+  const [otherMode, setOtherMode] = useState(false)
+  const [otherText, setOtherText] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -139,12 +136,34 @@ export default function JoinQueue() {
             {COLORS.map(c => (
               <button
                 type="button" key={c}
-                className={`color-chip ${form.car_color === c ? 'selected' : ''}`}
-                onClick={() => { setForm(f => ({ ...f, car_color: c })); setError('') }}
+                className={`color-chip ${!otherMode && form.car_color === c ? 'selected' : ''}`}
+                onClick={() => {
+                  setOtherMode(false); setOtherText('')
+                  setForm(f => ({ ...f, car_color: c })); setError('')
+                }}
               >
                 {tColor(c)}
               </button>
             ))}
+            {otherMode ? (
+              <input
+                type="text" autoFocus maxLength={30}
+                className="color-chip selected color-chip-input"
+                placeholder={t('otherColorPh')}
+                value={otherText}
+                onChange={e => {
+                  setOtherText(e.target.value)
+                  setForm(f => ({ ...f, car_color: normalizeCustomColor(e.target.value) })); setError('')
+                }}
+              />
+            ) : (
+              <button
+                type="button" className="color-chip color-chip-other"
+                onClick={() => { setOtherMode(true); setForm(f => ({ ...f, car_color: '' })); setError('') }}
+              >
+                {t('otherColor')}
+              </button>
+            )}
           </div>
         </div>
 
@@ -160,7 +179,7 @@ export default function JoinQueue() {
         <div className="field">
           <label htmlFor="plate">{t('plateLabel')}</label>
           <input
-            id="plate" type="text" placeholder="А 777 АА 01"
+            id="plate" type="text" placeholder={t('platePh')}
             value={form.plate}
             onChange={e => setForm(f => ({ ...f, plate: e.target.value }))}
             style={{ textTransform: 'uppercase' }}

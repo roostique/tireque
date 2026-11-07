@@ -5,12 +5,8 @@ import { api } from '../lib/api'
 import { appUrl } from '../lib/links'
 import { useQueueStream } from '../hooks/useQueueStream'
 import { useT } from '../i18n'
+import { colorDot } from '../lib/colors'
 
-const COLOR_HEX = {
-  'белый': '#f5f5f5', 'чёрный': '#222222', 'серый': '#888888', 'серебристый': '#c0c0c0',
-  'синий': '#2563EB', 'красный': '#DC2626', 'зелёный': '#16A34A', 'жёлтый': '#EAB308',
-  'оранжевый': '#F97316', 'коричневый': '#78350F', 'бежевый': '#D4A76A', 'фиолетовый': '#7C3AED',
-}
 
 export default function OperatorBoard() {
   const { secret } = useParams()
@@ -101,7 +97,7 @@ export default function OperatorBoard() {
           <div className="serving-car">
             <span
               className="car-color-dot lg"
-              style={{ background: COLOR_HEX[queue.serving.car_color] || '#888' }}
+              style={{ background: colorDot(queue.serving.car_color) }}
             />
             <div>
               <p className="serving-car-name">
@@ -139,7 +135,7 @@ export default function OperatorBoard() {
                 <span className="entry-pos">{i + 1}</span>
                 <span
                   className="car-color-dot"
-                  style={{ background: COLOR_HEX[e.car_color] || '#888' }}
+                  style={{ background: colorDot(e.car_color) }}
                 />
                 <div className="entry-info">
                   <span className="entry-car">{tColor(e.car_color)} {e.car_model}</span>

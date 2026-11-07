@@ -21,7 +21,7 @@ export default function CreateQueue() {
     setError('')
     let shop
     try {
-      shop = await api.createShop(name.trim() || 'Шиномонтаж')
+      shop = await api.createShop(name.trim() || t('defaultShopName'))
     } catch {
       setError(t('errNetwork'))
       setCreating(false)
@@ -46,7 +46,7 @@ export default function CreateQueue() {
       <div className="page-center-v">
         <div className="card">
           <div className="logo-area">
-            <h1>TireQueue</h1>
+            <h1>Jazylu</h1>
             <p className="text-muted">{t('appDesc')}</p>
           </div>
 
