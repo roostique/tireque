@@ -9,7 +9,7 @@ npm run build
 OUT=build/plesk
 rm -rf "$OUT" jazylu-plesk.zip
 mkdir -p "$OUT/server"
-cp server/index.js server/db.js server/store.js server/app.cjs server/package.json "$OUT/server/"
+cp server/*.js server/*.cjs server/package.json "$OUT/server/"
 cp -R client/dist "$OUT/public"
 EXPRESS=$(node -p "require('./server/package.json').dependencies.express")
 cat > "$OUT/package.json" <<JSON
