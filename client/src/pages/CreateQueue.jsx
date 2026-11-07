@@ -27,7 +27,7 @@ export default function CreateQueue() {
       setCreating(false)
       return
     }
-    const clientUrl = appUrl(`/q/${shop.code}`)
+    const clientUrl = appUrl(`/q/${shop.code}?src=qr`)
     try {
       const url = await QRCode.toDataURL(clientUrl, { width: 300, margin: 2, color: { dark: '#111827' } })
       setQrUrl(url)

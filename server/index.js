@@ -1,7 +1,9 @@
 import express from 'express'
 import { existsSync } from 'node:fs'
 import { join, resolve } from 'node:path'
+import { timingSafeEqual } from 'node:crypto'
 import { store, publicEntry, publicShop } from './store.js'
+import { recordView, stats, pruneOld } from './analytics.js'
 
 const PORT = Number(process.env.PORT) || 3000
 const HOST = process.env.HOST || '0.0.0.0'
@@ -141,6 +143,37 @@ api.post('/entries/:id/cancel', (req, res) => {
   notify(entry.shop_id)
   res.json({ ok: true })
 })
+
+// ---------- analytics ----------
+// Page-view beacon. Body may arrive as text/plain (sendBeacon) or JSON.
+api.post('/e', express.text({ type: 'text/plain', limit: '4kb' }), (req, res) => {
+  let b = req.body
+  if (typeof b === 'string') { try { b = JSON.parse(b) } catch { b = {} } }
+  b = b || {}
+  let shopId = null
+  try {
+    if (b.code) shopId = store.getShopByCode(String(b.code).slice(0, 12))?.id
+    else if (b.secret) shopId = store.getShopBySecret(String(b.secret).slice(0, 64))?.id
+    else if (b.entry) shopId = store.getEntry(String(b.entry).slice(0, 64))?.shop_id
+  } catch {}
+  recordView({ page: b.page, visitor: b.visitor, shopId, src: b.src, lang: b.lang, userAgent: req.get('user-agent') })
+  res.status(204).end()
+})
+
+// Owner dashboard data. Hidden behind STATS_KEY (env); 404 for anything else.
+function statsKeyOk(given) {
+  const want = process.env.STATS_KEY || ''
+  if (want.length < 12) return false
+  const a = Buffer.from(String(given || '')), b = Buffer.from(want)
+  return a.length === b.length && timingSafeEqual(a, b)
+}
+api.get('/stats/:key', (req, res) => {
+  if (!statsKeyOk(req.params.key)) return notFound(res)
+  res.set('Cache-Control', 'no-store').json(stats(req.query.days))
+})
+
+pruneOld()
+setInterval(pruneOld, 24 * 3600 * 1000).unref()
 
 api.use((req, res) => notFound(res))
 api.use((err, req, res, _next) => {

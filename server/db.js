@@ -35,6 +35,21 @@ db.exec(`
   );
 
   CREATE INDEX IF NOT EXISTS idx_entries_shop_status ON entries(shop_id, status, created_at);
+
+  -- Analytics: anonymous page views (no IP, no user agent, no personal data).
+  CREATE TABLE IF NOT EXISTS events (
+    id      INTEGER PRIMARY KEY,
+    ts      TEXT NOT NULL,
+    type    TEXT NOT NULL,
+    page    TEXT NOT NULL,
+    visitor TEXT NOT NULL,
+    shop_id TEXT,
+    src     TEXT,
+    device  TEXT,
+    lang    TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_events_ts ON events(ts);
+  CREATE INDEX IF NOT EXISTS idx_entries_created ON entries(created_at);
 `)
 
 console.log(`[db] ${join(DATA_DIR, 'tirequeue.db')}`)

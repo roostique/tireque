@@ -29,7 +29,7 @@ export default function OperatorBoard() {
 
   useEffect(() => {
     if (!shop?.code) return
-    const url = appUrl(`/q/${shop.code}`)
+    const url = appUrl(`/q/${shop.code}?src=qr`)
     QRCode.toDataURL(url, { width: 256, margin: 2, color: { dark: '#111827' } })
       .then(setQrUrl)
       .catch(() => {})

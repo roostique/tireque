@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { Globe } from 'lucide-react'
+import { useLocation } from 'react-router-dom'
 import { useT } from '../i18n'
 
 const LANGS = [
@@ -8,6 +9,11 @@ const LANGS = [
 ]
 
 export default function LangSwitcher() {
+  const { pathname } = useLocation()
+  return pathname.startsWith('/s/') ? null : <LangMenu />
+}
+
+function LangMenu() {
   const { lang, setLang } = useT()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
